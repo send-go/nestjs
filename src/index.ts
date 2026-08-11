@@ -5,6 +5,9 @@ export { SENDGO_OPTIONS } from './sendgo.constants';
 
 // @sendgo/node 코어 타입 재노출
 export type {
+  ShortUrlParams,
+  ShortUrlListParams,
+  ShortUrlStatsParams,
   SendgoConfig,
   Contact,
   AlimtalkParams,

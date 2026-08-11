@@ -34,6 +34,16 @@ export class SendgoService {
     return this.sendgo.friendtalk;
   }
 
+  /** 카카오 브랜드메시지 — 친구톡의 후속 채널. v2 전용. */
+  get brandMessage(): Sendgo['brandMessage'] {
+    return this.sendgo.brandMessage;
+  }
+
+  /** 짧은 URL — 링크 단축과 클릭 반응 분석. v2 전용. */
+  get shortUrl(): Sendgo['shortUrl'] {
+    return this.sendgo.shortUrl;
+  }
+
   /** SMS / LMS / MMS 전송 */
   get sms(): Sendgo['sms'] {
     return this.sendgo.sms;
