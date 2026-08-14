@@ -1,6 +1,6 @@
 # @sendgo/nestjs
 
-> **NestJS에서 카카오 알림톡, 친구톡, SMS를 가장 쉽게 발송하는 공식 NestJS 모듈**
+> **NestJS에서 카카오 알림톡, 브랜드메시지, SMS를 가장 쉽게 발송하는 공식 NestJS 모듈**
 
 [![npm](https://img.shields.io/npm/v/@sendgo/nestjs)](https://www.npmjs.com/package/@sendgo/nestjs)
 [![NestJS](https://img.shields.io/badge/NestJS-10%2B-E0234E?logo=nestjs)](https://nestjs.com)
@@ -150,6 +150,19 @@ await this.sendgo.alimtalk.send({
 ```
 
 ### 친구톡
+
+> ⚠️ **Deprecated — 친구톡은 카카오 정책에 따라 2025-12-31 종료되었습니다.**
+> 2026-01-01 부터 친구톡 발송 요청은 카카오 측에서 **브랜드메시지(자유형)** 로 자동 대체 발송됩니다.
+> 호출은 계속 성공하며, 자유 본문 타입(`FT`/`FI`/`FW`)을 개별 수신자에게 보내는 경로는
+> 현재 이것뿐이므로 기존 코드를 당장 바꿀 필요는 없습니다.
+>
+> 다음의 경우에는 **브랜드메시지**를 사용하세요.
+> - 템플릿 기반 리치 타입 (`FL`/`FC`/`FM`/`FP`/`FA`)
+> - 채널 친구가 **아닌** 수신자 (`targeting` = `N` / `I`)
+> - 수신 동의한 전체 채널 친구 동보 (`targeting` = `F`)
+>
+> 메시지 타입은 1:1 대응되며 변환은 서버가 처리합니다 — `FT`→`BT`, `FI`→`BI`, `FW`→`BW`,
+> `FL`→`BL`, `FC`→`BC`, `FM`→`BM`, `FP`→`BP`, `FA`→`BA`.
 
 ```ts
 // 텍스트형
@@ -345,6 +358,15 @@ A. 테스트 모듈에서 `SendgoService` 또는 `Sendgo` 프로바이더를 moc
 [SDK 가이드](https://sendgo.io/ko/sdk) 를 참고하세요.
 
 ## 변경 사항
+
+### 1.2.0 (2026-08-14)
+
+- **친구톡 Deprecated 표기** — 친구톡은 카카오 정책에 따라 2025-12-31 종료되었고,
+  2026-01-01 부터 발송 요청이 브랜드메시지(자유형)로 자동 대체 발송됩니다.
+  관련 API 에 각 언어의 표준 deprecation 표기를 달았습니다.
+- 자유 본문 타입(`FT`/`FI`/`FW`)의 개별 발송 경로는 아직 친구톡 API 뿐이라는 점을
+  문서에 명시했습니다 — 브랜드메시지 API 는 그 조합에 `NOT_A_BRAND_MESSAGE` 를 반환합니다.
+- 브랜드메시지 전환 안내와 메시지 타입 1:1 대응표를 README 에 추가했습니다.
 
 ### 1.1.0 (2026-08-11)
 

@@ -29,7 +29,13 @@ export class SendgoService {
     return this.sendgo.alimtalk;
   }
 
-  /** 카카오 친구톡 전송 */
+  /**
+   * 카카오 친구톡 전송.
+   *
+   * @deprecated 친구톡은 2025-12-31 종료되었습니다. 2026-01-01 부터 친구톡 발송
+   * 요청은 카카오 측에서 브랜드메시지(자유형)로 자동 대체 발송됩니다.
+   * 신규 연동은 `brandMessage` 를 사용하세요.
+   */
   get friendtalk(): Sendgo['friendtalk'] {
     return this.sendgo.friendtalk;
   }
