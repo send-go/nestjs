@@ -357,7 +357,120 @@ A. 테스트 모듈에서 `SendgoService` 또는 `Sendgo` 프로바이더를 moc
 사용 예시와 파라미터는 [코어 README](https://github.com/send-go) 와
 [SDK 가이드](https://sendgo.io/ko/sdk) 를 참고하세요.
 
+## 관리 API — 채널·템플릿·발신번호 등록 (v2 전용)
+
+`SendgoService` 가 코어의 관리 서비스를 그대로 노출합니다. 콘솔에서만 되던
+등록·심사를 주입받은 서비스에서 처리할 수 있습니다.
+
+| 접근 | 하는 일 | 계정 |
+| --- | --- | --- |
+| `sendgo.kakaoSenders` | 카카오 채널 인증·등록·동기화, 브랜드메시지 M/N 신청 | 기업 |
+| `sendgo.noticeTemplates` | 알림톡 템플릿 CRUD, 검수 요청·취소, 승인 취소, 휴면 해제 | 기업 |
+| `sendgo.brandTemplates` | 브랜드메시지 템플릿 CRUD, 동기화, 가져오기 | 기업 |
+| `sendgo.senderRegistration` | 발신번호 등록 신청, 중복 확인, 유형 안내 | 개인·기업 |
+| `sendgo.messageTemplates` | 문자 상용구 템플릿 CRUD | 개인·기업 |
+| `sendgo.kakaoImages` | 카카오 이미지 업로드 — 템플릿용 URL 발급 | 기업 |
+| `sendgo.rejectedNumbers` | 수신거부(080) 번호 조회 | 개인·기업 |
+| `sendgo.webhook` | 이벤트 웹훅 구독 — 심사 결과 수신 | 개인·기업 |
+
+> **sendgo.io 콘솔에 들어올 일이 없습니다.** 휴대폰 발신번호는 PASS 대신
+> 신분증 사본을 받아 sendgo 운영자가 대신 심사합니다. 사람이 개입하는 지점은
+> 카카오 채널 인증번호 하나뿐이고, 그것도 여러분 화면에서 입력받으면 됩니다.
+> 심사가 붙는 것들은 비동기라 웹훅으로 결과를 받으세요.
+
+```ts
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { SendgoService } from '@sendgo/nestjs';
+
+@Injectable()
+export class OnboardingService {
+  private readonly logger = new Logger(OnboardingService.name);
+
+  constructor(private readonly sendgo: SendgoService) {}
+
+  /** 1단계 — 카카오가 관리자 휴대폰으로 인증번호를 SMS 발송한다. */
+  async requestChannelCode(yellowId: string, phone: string) {
+    return this.sendgo.kakaoSenders.requestToken(yellowId, phone);
+  }
+
+  /** 2단계 — 사용자가 입력한 인증번호로 발신프로필 생성. */
+  async completeChannel(yellowId: string, phone: string, code: string) {
+    const created = await this.sendgo.kakaoSenders.create({
+      token: code,
+      yellowId,
+      phoneNumber: phone,
+      categoryCode: '001001',
+    });
+
+    return created.data.sender.kakaoSenderKey;
+  }
+
+  /** 표준 템플릿을 등록하고 검수를 요청한다. */
+  async provisionTemplate(kakaoSenderKey: string) {
+    const created = await this.sendgo.noticeTemplates.create({
+      kakaoSenderKey,
+      templateName: '주문 접수 안내',
+      templateContent: '#{name}님, 주문 #{orderNo}이 접수되었습니다.',
+      templateMessageType: 'BA',
+      templateEmphasizeType: 'NONE',
+      categoryCode: '001001',
+      messagePurpose: 'order_delivery',
+      legalBasis: 'transaction',
+      benefitOrigin: 'none',
+      expiryType: 'none',
+      optInReviewConfirmed: true,
+      ctaClearConfirmed: true,
+      policyConfirmed: true,
+    });
+
+    const code = created.data.template.templateCode;
+    await this.sendgo.noticeTemplates.requestInspection(code);
+
+    return code;
+  }
+
+  /**
+   * 승인 여부는 스케줄러로 확인한다. 검수는 30분~1영업일 걸리므로
+   * 요청 스레드에서 기다리면 안 된다.
+   */
+  @Cron(CronExpression.EVERY_30_MINUTES)
+  async pollPendingTemplates() {
+    for (const code of await this.pendingTemplateCodes()) {
+      const synced = await this.sendgo.noticeTemplates.sync(code);
+      const status = synced.data.template.inspectionStatus;
+
+      if (status === 'APR') this.logger.log(`템플릿 승인: ${code}`);
+      if (status === 'REJ') this.logger.warn(`템플릿 반려: ${code}`);
+    }
+  }
+
+  private async pendingTemplateCodes(): Promise<string[]> {
+    return [];  // 앱의 저장소에서 읽어 온다
+  }
+}
+```
+
+발신번호 등록과 브랜드메시지 템플릿을 포함한 전체 파라미터는
+[@sendgo/node README](https://github.com/send-go/node) 를 참고하세요.
+
+---
+
 ## 변경 사항
+
+### 1.3.0 (2026-09-11)
+
+- **관리 API 노출** — `SendgoService` 에 `kakaoSenders` · `noticeTemplates` ·
+  `brandTemplates` · `senderRegistration` · `messageTemplates` 게터를
+  추가했습니다. 콘솔에서만 되던 채널 등록, 알림톡 템플릿 검수 요청,
+  발신번호 심사 접수를 주입받은 서비스에서 처리할 수 있습니다.
+- `@sendgo/node` 를 `^1.3.0` 으로 올렸습니다.
+- **이벤트 웹훅** 추가 — 발신번호 승인, 알림톡 검수 결과, 채널 차단,
+  브랜드메시지 타겟팅 결과를 구독해 받습니다. 서명은 받은 원본 바이트로
+  검증합니다(SDK 에 검증 헬퍼 포함).
+- **카카오 이미지 업로드** 추가 — 브랜드메시지 템플릿의 `imageUrl` 은 카카오가
+  호스팅하는 URL 이어야 하는데, 그 URL 을 얻는 길이 콘솔에만 있었습니다.
+- **수신거부(080) 조회** 추가 — 자기 DB 의 수신 상태를 맞출 수 있습니다.
 
 ### 1.2.1 (2026-08-14)
 

@@ -55,6 +55,50 @@ export class SendgoService {
     return this.sendgo.sms;
   }
 
+  // -------------------------------------------------------- 관리 API (v2 전용)
+  // 콘솔에서만 되던 등록·심사. 대부분 즉시 완료되지 않는다 — 등록 성공은
+  // "접수됨"이지 "사용 가능"이 아니다.
+
+  /** 카카오 발신프로필(채널) 등록·동기화. v2 전용, 기업 계정 전용. */
+  get kakaoSenders(): Sendgo['kakaoSenders'] {
+    return this.sendgo.kakaoSenders;
+  }
+
+  /** 알림톡 템플릿 등록·수정·검수 요청. v2 전용, 기업 계정 전용. */
+  get noticeTemplates(): Sendgo['noticeTemplates'] {
+    return this.sendgo.noticeTemplates;
+  }
+
+  /** 브랜드메시지(구 친구톡) 템플릿 관리. v2 전용, 기업 계정 전용. */
+  get brandTemplates(): Sendgo['brandTemplates'] {
+    return this.sendgo.brandTemplates;
+  }
+
+  /** 발신번호 등록·심사 접수. v2 전용. */
+  get senderRegistration(): Sendgo['senderRegistration'] {
+    return this.sendgo.senderRegistration;
+  }
+
+  /** 문자 상용구 템플릿. v2 전용. */
+  get messageTemplates(): Sendgo['messageTemplates'] {
+    return this.sendgo.messageTemplates;
+  }
+
+  /** 카카오 이미지 업로드 — 브랜드메시지 템플릿용 URL 발급. v2 전용, 기업 계정 전용. */
+  get kakaoImages(): Sendgo['kakaoImages'] {
+    return this.sendgo.kakaoImages;
+  }
+
+  /** 수신거부(080) 번호 조회. v2 전용. */
+  get rejectedNumbers(): Sendgo['rejectedNumbers'] {
+    return this.sendgo.rejectedNumbers;
+  }
+
+  /** 이벤트 웹훅 구독 — 등록·심사 결과를 밀어 받는다. v2 전용. */
+  get webhook(): Sendgo['webhook'] {
+    return this.sendgo.webhook;
+  }
+
   /** 원본 Sendgo 클라이언트 인스턴스 */
   get client(): Sendgo {
     return this.sendgo;
