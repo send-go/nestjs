@@ -1,5 +1,5 @@
 import { DynamicModule, Global, Module, Provider } from '@nestjs/common';
-import { Sendgo, SendgoConfig } from '@sendgo/node';
+import { Sendgo, SendgoConfig, AccountClient, AccountConfig } from '@sendgo/node';
 import { SENDGO_OPTIONS } from './sendgo.constants';
 import { SendgoService } from './sendgo.service';
 
@@ -39,6 +39,15 @@ export interface SendgoModuleAsyncOptions {
 @Global()
 @Module({})
 export class SendgoModule {
+  /** 발송용 키 없이 에이전트 토큰만으로 계정 API를 등록합니다. */
+  static forAccount(options: AccountConfig): DynamicModule {
+    return {
+      module: SendgoModule,
+      providers: [{ provide: AccountClient, useFactory: () => new AccountClient(options) }],
+      exports: [AccountClient],
+    };
+  }
+
   /** 정적 설정으로 Sendgo 모듈을 등록합니다. */
   static forRoot(options: SendgoConfig): DynamicModule {
     const optionsProvider: Provider = {
