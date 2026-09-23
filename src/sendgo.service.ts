@@ -99,6 +99,11 @@ export class SendgoService {
     return this.sendgo.webhook;
   }
 
+  /** 템플릿 공용 폴더. v2 전용, 기업 계정 전용. */
+  get templateFolders(): Sendgo['templateFolders'] {
+    return this.sendgo.templateFolders;
+  }
+
   /** 원본 Sendgo 클라이언트 인스턴스 */
   get client(): Sendgo {
     return this.sendgo;
