@@ -104,6 +104,9 @@ export class SendgoService {
     return this.sendgo.templateFolders;
   }
 
+  /** 서버 전용 이메일 API. v2 전용. */
+  get email(): Sendgo['email'] { return this.sendgo.email; }
+
   /** 원본 Sendgo 클라이언트 인스턴스 */
   get client(): Sendgo {
     return this.sendgo;
